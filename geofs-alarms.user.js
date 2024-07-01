@@ -5,29 +5,16 @@
 // @description  Adds cockpit alarm sounds to GeoFS online flight simulator
 // @author       PEK-97
 // @match        https://www.geo-fs.com/geofs.php*
-// @grant        GM.getResourceUrl
-// @resource     stall https://github.com/fengshuo2004/geofs-alarms/raw/master/stall.ogg
-// @resource     bankangle https://github.com/fengshuo2004/geofs-alarms/raw/master/bankangle.ogg
-// @resource     overspeed https://github.com/fengshuo2004/geofs-alarms/raw/master/overspeed.ogg
+
 // ==/UserScript==
 
-(function () {
-    'use strict';
-    // load the audio clips
-    let stickShake;
-    GM.getResourceUrl("stall").then(
-        (data)=>{
-            stickShake = new Audio(data);
-            stickShake.loop = true;
-        }
-    );
-    let overspeedClacker;
-    GM.getResourceUrl("overspeed").then(
-        (data) => {
-            overspeedClacker = new Audio(data);
-            overspeedClacker.loop = true;
-        }
-    );
+
+    var stickShake = new Audio("https://github.com/fengshuo2004/geofs-alarms/raw/master/stall.ogg");
+    stickShake.type = "audio/ogg";
+    stickShake.loop = true;
+    var overspeedClacker = new Audio("https://github.com/fengshuo2004/geofs-alarms/raw/master/overspeed.ogg");
+    overspeedClacker.type = "audio/ogg";
+    overspeedClacker.loop = true;
     // wait until flight sim is fully loaded
     let itv = setInterval(
         function(){
@@ -37,13 +24,18 @@
             }
         }
     ,500);
-    function main(){
+
+    async function main(){
         // monkey-patch the stall.setVisibility method
         let prevStalled = false;
         unsafeWindow.ui.hud.stall.setVisOld = unsafeWindow.ui.hud.stall.setVisibility;
         unsafeWindow.ui.hud.stall.setVisibility = function (a) {
             if (a) {
-                stickShake.play();
+                 try {
+                 stickShake.play();
+                 } catch {
+                     console.log("oh no")
+                 }
             } else if (prevStalled) {
                 stickShake.pause();
             }
@@ -57,11 +49,10 @@
             this.setAniValOld(a);
             let hasOversped = unsafeWindow.geofs.animation.values.kias >= 350;
             if (hasOversped && !prevOversped){
-                overspeedClacker.play();
+                 overspeedClacker.play();
             } else if (!hasOversped && prevOversped){
                 overspeedClacker.pause();
             }
             prevOversped = hasOversped;
         }
     }
-})();
